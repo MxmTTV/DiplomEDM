@@ -1,0 +1,7 @@
+.env
+storage/*
+!storage/.gitkeep
+go.sum
+.idea/
+.vscode/
+frontend/node_modules/
