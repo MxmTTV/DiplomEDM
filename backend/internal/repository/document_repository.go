@@ -54,3 +54,45 @@ func (r *DocumentRepository) UpdateDocumentStatus(id uint, status models.Documen
 		Where("id = ?", id).
 		Update("current_status", status).Error
 }
+
+// UpdateDocumentStatus обновляет статус документа
+func (r *DocumentRepository) UpdateDocumentsStatus(id uint, status models.DocumentStatus) error {
+	return r.db.Model(&models.Document{}).
+		Where("id = ?", id).
+		Update("current_status_code", status).Error
+}
+
+// GetDocumentsWithFilters получает документы с фильтрацией
+func (r *DocumentRepository) GetDocumentsWithFilters(authorID uint, userRole string, status string, title string, dateFrom string, dateTo string) ([]models.Document, error) {
+    var docs []models.Document
+    query := r.db.Model(&models.Document{}).Preload("Author")
+
+    // Фильтр по автору (если не админ)
+    if userRole != "admin" {
+        query = query.Where("author_id = ?", authorID)
+    }
+
+    // Фильтр по статусу
+    if status != "" {
+        query = query.Where("current_status = ?", status)  // ← ИСПРАВЛЕНО!
+    }
+
+    // Фильтр по названию (поиск)
+    if title != "" {
+        query = query.Where("title ILIKE ?", "%"+title+"%")
+    }
+
+    // Фильтр по дате от
+    if dateFrom != "" {
+        query = query.Where("created_at >= ?", dateFrom)
+    }
+
+    // Фильтр по дате до
+    if dateTo != "" {
+        query = query.Where("created_at <= ?", dateTo)
+    }
+
+    // Сортировка по дате (новые сверху)
+    err := query.Order("created_at DESC").Find(&docs).Error
+    return docs, err
+}

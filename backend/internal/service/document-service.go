@@ -125,3 +125,68 @@ func (s *DocumentService) GetDocumentByID(id, userID uint, userRole string) (*mo
 
 	return doc, nil
 }
+
+// ChangeStatus меняет статус документа
+func (s *DocumentService) ChangeStatus(id, userID uint, req *models.ChangeStatusRequest, userRole string) (*models.Document, error) {
+	// Получаем документ
+	doc, err := s.repo.GetDocumentByID(id)
+	if err != nil {
+		return nil, errors.New("document not found")
+	}
+
+	// Проверка прав
+	if userRole != "admin" && doc.AuthorID != userID {
+		return nil, errors.New("access denied")
+	}
+
+	// Проверяем допустимые переходы статусов
+	oldStatus := string(doc.CurrentStatus)
+	newStatus := req.Status
+
+	if !s.isValidStatusTransition(oldStatus, newStatus) {
+		return nil, fmt.Errorf("invalid status transition from %s to %s", oldStatus, newStatus)
+	}
+
+	// Обновляем статус
+	if err := s.repo.UpdateDocumentStatus(id, models.DocumentStatus(newStatus)); err != nil {
+		return nil, err
+	}
+
+	// Обновляем объект документа
+	doc.CurrentStatus = models.DocumentStatus(newStatus)
+
+	// 📝 ЛОГИРУЕМ СМЕНУ СТАТУСА
+	if err := s.historyService.LogStatusChange(id, userID, oldStatus, newStatus, req.Comment); err != nil {
+		log.Printf("Warning: failed to log status change: %v", err)
+	}
+
+	return doc, nil
+}
+
+// isValidStatusTransition проверяет допустимость перехода между статусами
+func (s *DocumentService) isValidStatusTransition(from, to string) bool {
+	transitions := map[string][]string{
+		"draft":      {"pending", "draft"},
+		"pending":    {"approved", "rejected", "draft"},
+		"approved":   {"archived", "pending"},
+		"rejected":   {"draft", "pending"},
+		"archived":   {"draft"},
+	}
+
+	allowed, exists := transitions[from]
+	if !exists {
+		return false
+	}
+
+	for _, status := range allowed {
+		if status == to {
+			return true
+		}
+	}
+	return false
+}
+
+// GetDocumentsWithFilters получает документы с фильтрами
+func (s *DocumentService) GetDocumentsWithFilters(authorID uint, userRole string, status, title, dateFrom, dateTo string) ([]models.Document, error) {
+	return s.repo.GetDocumentsWithFilters(authorID, userRole, status, title, dateFrom, dateTo)
+}

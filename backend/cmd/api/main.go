@@ -68,12 +68,13 @@ func main() {
 		docs := api.Group("/documents")
 		{
 			docs.POST("", docHandler.UploadDocument)
-			docs.GET("", docHandler.GetMyDocuments)
+   			docs.GET("", docHandler.GetDocumentsWithFilters)  
 			docs.GET("/:id", docHandler.GetDocumentByID)
 			docs.GET("/:id/download", docHandler.DownloadDocument)
-			
-			// 📝 История документа
 			docs.GET("/:id/history", historyHandler.GetDocumentHistory)
+			
+			// 🔄 Смена статуса
+			docs.PATCH("/:id/status", docHandler.ChangeStatus)
 		}
 
 		// Админские роуты (только admin)
