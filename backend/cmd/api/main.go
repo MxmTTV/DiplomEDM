@@ -8,12 +8,13 @@ import (
 	"DiplomEDM/backend/internal/service"
 	"DiplomEDM/backend/internal/utils"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func main() {
@@ -48,6 +49,20 @@ func main() {
 	// 7. Gin
 	r := gin.Default()
 
+	r.Use(func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "http://localhost:5173")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		c.Header("Access-Control-Allow-Credentials", "true")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	})
+
 	// 8. Health-check (публичный)
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok", "db": "connected"})
@@ -68,13 +83,12 @@ func main() {
 		docs := api.Group("/documents")
 		{
 			docs.POST("", docHandler.UploadDocument)
-   			docs.GET("", docHandler.GetDocumentsWithFilters)  
+			docs.GET("", docHandler.GetDocumentsWithFilters)
 			docs.GET("/:id", docHandler.GetDocumentByID)
 			docs.GET("/:id/download", docHandler.DownloadDocument)
 			docs.GET("/:id/history", historyHandler.GetDocumentHistory)
-			
-			// 🔄 Смена статуса
-			docs.PATCH("/:id/status", docHandler.ChangeStatus)
+			// 🔄 Смена статуса - ТОЛЬКО ДЛЯ АДМИНА!
+			docs.PATCH("/:id/status", middleware.RequireRole("admin"), docHandler.ChangeStatus)
 		}
 
 		// Админские роуты (только admin)

@@ -1,0 +1,27 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; transition: background 0.3s ease; }
+
+/* Анимации */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+.animate-fadeIn { animation: fadeIn 0.5s ease; }
+.animate-slideIn { animation: slideIn 0.3s ease; }
+
+/* Карточки */
+.shadow-lg { box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+.shadow-hover { transition: box-shadow 0.3s ease; }
+.shadow-hover:hover { box-shadow: 0 15px 50px rgba(0,0,0,0.15); }
+.rounded-2xl { border-radius: 16px; }
+
+/* Кнопки */
+.btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 8px; color: white; font-weight: 500; transition: all 0.3s ease; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102,126,234,0.4); }
+
+/* Статусы */
+.status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .mobile-hide { display: none; }
+    .mobile-stack { flex-direction: column; }
+}

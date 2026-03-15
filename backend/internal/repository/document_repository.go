@@ -2,6 +2,7 @@ package repository
 
 import (
 	"DiplomEDM/backend/internal/models"
+
 	"gorm.io/gorm"
 )
 
@@ -64,35 +65,35 @@ func (r *DocumentRepository) UpdateDocumentsStatus(id uint, status models.Docume
 
 // GetDocumentsWithFilters получает документы с фильтрацией
 func (r *DocumentRepository) GetDocumentsWithFilters(authorID uint, userRole string, status string, title string, dateFrom string, dateTo string) ([]models.Document, error) {
-    var docs []models.Document
-    query := r.db.Model(&models.Document{}).Preload("Author")
+	var docs []models.Document
+	query := r.db.Model(&models.Document{}).Preload("Author")
 
-    // Фильтр по автору (если не админ)
-    if userRole != "admin" {
-        query = query.Where("author_id = ?", authorID)
-    }
+	// Фильтр по автору (если не админ)
+	if userRole != "admin" {
+		query = query.Where("author_id = ?", authorID)
+	}
 
-    // Фильтр по статусу
-    if status != "" {
-        query = query.Where("current_status = ?", status)  // ← ИСПРАВЛЕНО!
-    }
+	// Фильтр по статусу
+	if status != "" {
+		query = query.Where("current_status = ?", status)
+	}
 
-    // Фильтр по названию (поиск)
-    if title != "" {
-        query = query.Where("title ILIKE ?", "%"+title+"%")
-    }
+	// Фильтр по названию (поиск)
+	if title != "" {
+		query = query.Where("title ILIKE ?", "%"+title+"%")
+	}
 
-    // Фильтр по дате от
-    if dateFrom != "" {
-        query = query.Where("created_at >= ?", dateFrom)
-    }
+	// Фильтр по дате от
+	if dateFrom != "" {
+		query = query.Where("created_at >= ?", dateFrom)
+	}
 
-    // Фильтр по дате до
-    if dateTo != "" {
-        query = query.Where("created_at <= ?", dateTo)
-    }
+	// Фильтр по дате до
+	if dateTo != "" {
+		query = query.Where("created_at <= ?", dateTo)
+	}
 
-    // Сортировка по дате (новые сверху)
-    err := query.Order("created_at DESC").Find(&docs).Error
-    return docs, err
+	// Сортировка по дате (новые сверху)
+	err := query.Order("created_at DESC").Find(&docs).Error
+	return docs, err
 }

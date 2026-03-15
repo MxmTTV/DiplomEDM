@@ -2,12 +2,12 @@ package handler
 
 import (
 	"DiplomEDM/backend/internal/service"
-	"DiplomEDM/backend/internal/models"
-	"github.com/gin-gonic/gin"
-	"net/http"
-	"strconv"
 	"fmt"
+	"net/http"
 	"os"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 type DocumentHandler struct {
@@ -88,7 +88,7 @@ func (h *DocumentHandler) GetDocumentByID(c *gin.Context) {
 	c.JSON(http.StatusOK, doc)
 }
 
-/// DownloadDocument отдаёт файл на скачивание
+// / DownloadDocument отдаёт файл на скачивание
 func (h *DocumentHandler) DownloadDocument(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
@@ -118,33 +118,31 @@ func (h *DocumentHandler) DownloadDocument(c *gin.Context) {
 	c.Header("Content-Type", doc.MimeType)
 	c.File(doc.FilePath)
 }
+
 // ChangeStatus обрабатывает смену статуса
 func (h *DocumentHandler) ChangeStatus(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid document id"})
-		return
-	}
-
-	userID, _ := c.Get("user_id")
+	// Получаем роль пользователя
 	userRole, _ := c.Get("user_role")
+	roleStr, _ := userRole.(string)
 
-	var req models.ChangeStatusRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	// Получаем новый статус из запроса
+	var input struct {
+		Status  string `json:"status"`
+		Comment string `json:"comment"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	doc, err := h.service.ChangeStatus(uint(id), userID.(uint), &req, userRole.(string))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// Если статус "approved" или "rejected" — только админ
+	if (input.Status == "approved" || input.Status == "rejected") && roleStr != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Только администратор может утверждать или отклонять документы"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message":  "status changed successfully",
-		"document": doc,
-	})
+	// ... остальной код
 }
 
 // GetDocumentsWithFilters получает документы с фильтрами
@@ -175,10 +173,10 @@ func (h *DocumentHandler) GetDocumentsWithFilters(c *gin.Context) {
 		"documents": docs,
 		"count":     len(docs),
 		"filters": gin.H{
-			"status":     status,
-			"title":      title,
-			"date_from":  dateFrom,
-			"date_to":    dateTo,
+			"status":    status,
+			"title":     title,
+			"date_from": dateFrom,
+			"date_to":   dateTo,
 		},
 	})
 }
