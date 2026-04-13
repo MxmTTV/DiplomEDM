@@ -1,26 +1,29 @@
 package models
 
 import (
-	"golang.org/x/crypto/bcrypt"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
-type UserRole string
-
-const (
-	RoleAdmin    UserRole = "admin"
-	RoleEmployee UserRole = "employee"
-)
-
+// User представляет пользователя системы
 type User struct {
 	ID           uint      `json:"id" gorm:"primaryKey"`
 	Email        string    `json:"email" gorm:"uniqueIndex:idx_users_email;not null"`
-	PasswordHash string    `json:"-" gorm:"not null"` // Не выводим в JSON
+	PasswordHash string    `json:"-" gorm:"column:password_hash;not null"` // ❗ password_hash в БД
 	FullName     string    `json:"full_name" gorm:"not null"`
-	Role         UserRole  `json:"role" gorm:"type:user_role;default:'employee'"`
+	Role         string    `json:"role" gorm:"type:varchar(50);not null;default:'teacher'"` // ❗ string вместо UserRole
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }
+
+// Роли пользователей
+const (
+	RoleDirector  = "director"
+	RoleSecretary = "secretary"
+	RoleZavuch    = "zavuch"
+	RoleTeacher   = "teacher"
+)
 
 // HashPassword хэширует пароль перед сохранением
 func (u *User) HashPassword(password string) error {

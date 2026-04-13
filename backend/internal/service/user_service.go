@@ -8,7 +8,7 @@ import (
 )
 
 type UserService struct {
-	repo  *repository.UserRepository
+	repo   *repository.UserRepository
 	jwtMgr *utils.JWTManager
 }
 
@@ -28,10 +28,11 @@ func (s *UserService) Register(req *models.RegisterRequest) (*models.AuthRespons
 	}
 
 	// Создаём пользователя
+	// По умолчанию все новые пользователи — учителя (teachers)
 	user := &models.User{
 		Email:    req.Email,
 		FullName: req.FullName,
-		Role:     models.RoleEmployee,
+		Role:     models.RoleTeacher, // ✅ Просто teacher по умолчанию
 	}
 
 	// Хэшируем пароль

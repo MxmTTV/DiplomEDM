@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Dropdown, Modal, Form, Input, Button, message, Avatar, type MenuProps } from 'antd';
 import { UserOutlined, LockOutlined, LogoutOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import useAuthStore from '../store/authStore';
+import { ROLE_LABELS } from '../types/roles';
 
 interface ProfileMenuProps {
     onLogout: () => void;
@@ -13,7 +14,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ onLogout }) => {
     const [passwordForm] = Form.useForm();
     const { user } = useAuthStore();
 
-    const handleChangePassword = async (values: any) => {
+    const handleChangePassword = async () => {
         message.success('Пароль изменён!');
         setPasswordModal(false);
         passwordForm.resetFields();
@@ -112,7 +113,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ onLogout }) => {
                 <div style={{ padding: 20 }}>
                     <p><strong>Email:</strong> {user?.email}</p>
                     <p><strong>Имя:</strong> {user?.full_name}</p>
-                    <p><strong>Роль:</strong> {user?.role === 'admin' ? '👑 Администратор' : '👤 Сотрудник'}</p>
+                    <p><strong>Роль:</strong> {user?.role ? ROLE_LABELS[user.role] : 'Не указана'}</p>
                 </div>
             </Modal>
         </>

@@ -87,8 +87,7 @@ func main() {
 			docs.GET("/:id", docHandler.GetDocumentByID)
 			docs.GET("/:id/download", docHandler.DownloadDocument)
 			docs.GET("/:id/history", historyHandler.GetDocumentHistory)
-			// 🔄 Смена статуса - ТОЛЬКО ДЛЯ АДМИНА!
-			docs.PATCH("/:id/status", middleware.RequireRole("admin"), docHandler.ChangeStatus)
+			docs.PATCH("/:id/status", docHandler.ChangeStatus)
 		}
 
 		// Админские роуты (только admin)

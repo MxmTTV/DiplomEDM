@@ -27,8 +27,8 @@ func NewDocumentService(repo *repository.DocumentRepository, historyService *His
 
 // AllowedMimeTypes разрешённые типы файлов
 var AllowedMimeTypes = map[string]bool{
-	"application/pdf":                                     true,
-	"application/msword":                                  true,
+	"application/pdf":    true,
+	"application/msword": true,
 	"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true,
 }
 
@@ -56,14 +56,14 @@ func (s *DocumentService) UploadDocument(file *multipart.FileHeader, title, desc
 
 	// Создаём запись в БД
 	doc := &models.Document{
-		Title:         title,
-		Description:   description,
-		FilePath:      filePath,
-		FileName:      file.Filename,
-		FileSize:      file.Size,
-		MimeType:      file.Header.Get("Content-Type"),
-		AuthorID:      authorID,
-		CurrentStatus: models.StatusDraft,
+		Title:             title,
+		Description:       description,
+		FilePath:          filePath,
+		FileName:          file.Filename,
+		FileSize:          file.Size,
+		MimeType:          file.Header.Get("Content-Type"),
+		AuthorID:          authorID,
+		CurrentStatusCode: models.StatusDraft, // ✅ Используем константу
 	}
 
 	if err := s.repo.CreateDocument(doc); err != nil {
@@ -118,8 +118,8 @@ func (s *DocumentService) GetDocumentByID(id, userID uint, userRole string) (*mo
 		return nil, err
 	}
 
-	// Проверка прав: админ видит всё, сотрудник — только своё
-	if userRole != "admin" && doc.AuthorID != userID {
+	// Проверка прав: директор и админ видят всё, остальные — только своё
+	if userRole != models.RoleDirector && userRole != "admin" && doc.AuthorID != userID {
 		return nil, errors.New("access denied")
 	}
 
@@ -127,20 +127,41 @@ func (s *DocumentService) GetDocumentByID(id, userID uint, userRole string) (*mo
 }
 
 // ChangeStatus меняет статус документа
+// ChangeStatus меняет статус документа
 func (s *DocumentService) ChangeStatus(id, userID uint, req *models.ChangeStatusRequest, userRole string) (*models.Document, error) {
+	// 🐛 ЛОГ: что пришло в сервис
+	log.Printf("🔍 Service ChangeStatus: userRole='%s', userID=%d, doc_id=%d", userRole, userID, id)
+
 	// Получаем документ
 	doc, err := s.repo.GetDocumentByID(id)
 	if err != nil {
 		return nil, errors.New("document not found")
 	}
 
-	// Проверка прав
-	if userRole != "admin" && doc.AuthorID != userID {
-		return nil, errors.New("access denied")
+	log.Printf("🔍 Document author_id=%d, current_status=%s", doc.AuthorID, doc.CurrentStatusCode)
+
+	// 🔐 ПРОВЕРКА ПРАВ:
+	log.Printf("🔍 Checking permissions: userRole='%s', isDirector=%v, isAdmin=%v",
+		userRole, userRole == models.RoleDirector, userRole == "admin")
+
+	// Директор и админ могут менять ЛЮБЫЕ документы
+	if userRole == models.RoleDirector || userRole == "admin" {
+		log.Printf("✅ User is director/admin, allowing access")
+		// Все права есть
+	} else if userRole == models.RoleSecretary {
+		log.Printf("✅ User is secretary, allowing access")
+		// Секретарь может менять любые документы
+	} else {
+		log.Printf("⚠️ User is teacher/zavuch, checking ownership")
+		// Учитель и завуч — только свои документы
+		if doc.AuthorID != userID {
+			log.Printf("❌ Access denied: doc.AuthorID=%d != userID=%d", doc.AuthorID, userID)
+			return nil, errors.New("недостаточно прав для изменения чужого документа")
+		}
 	}
 
 	// Проверяем допустимые переходы статусов
-	oldStatus := string(doc.CurrentStatus)
+	oldStatus := doc.CurrentStatusCode
 	newStatus := req.Status
 
 	if !s.isValidStatusTransition(oldStatus, newStatus) {
@@ -148,12 +169,12 @@ func (s *DocumentService) ChangeStatus(id, userID uint, req *models.ChangeStatus
 	}
 
 	// Обновляем статус
-	if err := s.repo.UpdateDocumentStatus(id, models.DocumentStatus(newStatus)); err != nil {
+	if err := s.repo.UpdateDocumentStatus(id, newStatus); err != nil {
 		return nil, err
 	}
 
 	// Обновляем объект документа
-	doc.CurrentStatus = models.DocumentStatus(newStatus)
+	doc.CurrentStatusCode = newStatus
 
 	// 📝 ЛОГИРУЕМ СМЕНУ СТАТУСА
 	if err := s.historyService.LogStatusChange(id, userID, oldStatus, newStatus, req.Comment); err != nil {
@@ -166,11 +187,11 @@ func (s *DocumentService) ChangeStatus(id, userID uint, req *models.ChangeStatus
 // isValidStatusTransition проверяет допустимость перехода между статусами
 func (s *DocumentService) isValidStatusTransition(from, to string) bool {
 	transitions := map[string][]string{
-		"draft":      {"pending", "draft"},
-		"pending":    {"approved", "rejected", "draft"},
-		"approved":   {"archived", "pending"},
-		"rejected":   {"draft", "pending"},
-		"archived":   {"draft"},
+		models.StatusDraft:     {models.StatusReview, models.StatusDraft},
+		models.StatusReview:    {models.StatusApproved, models.StatusRejected, models.StatusDraft},
+		models.StatusApproved:  {models.StatusCompleted, models.StatusReview},
+		models.StatusRejected:  {models.StatusDraft, models.StatusReview},
+		models.StatusCompleted: {models.StatusDraft},
 	}
 
 	allowed, exists := transitions[from]

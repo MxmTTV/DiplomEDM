@@ -1,10 +1,12 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import type { Role } from '../types/roles';
 
-interface User {
+export interface User {
     id: number;
     email: string;
     full_name: string;
-    role: string;
+    role: Role;
 }
 
 interface AuthState {
@@ -12,24 +14,25 @@ interface AuthState {
     token: string | null;
     login: (user: User, token: string) => void;
     logout: () => void;
-    isAuthenticated: () => boolean;
+    updateRole: (role: Role) => void;
 }
 
-const useAuthStore = create<AuthState>((set) => ({
-    user: null,
-    token: localStorage.getItem('token'),
-
-    login: (user, token) => {
-        localStorage.setItem('token', token);
-        set({ user, token });
-    },
-
-    logout: () => {
-        localStorage.removeItem('token');
-        set({ user: null, token: null });
-    },
-
-    isAuthenticated: () => !!localStorage.getItem('token'),
-}));
+const useAuthStore = create<AuthState>()(
+    persist(
+        (set) => ({
+            user: null,
+            token: null,
+            login: (user, token) => set({ user, token }),
+            logout: () => {
+                localStorage.removeItem('token');
+                set({ user: null, token: null });
+            },
+            updateRole: (role) => set((state) => ({
+                user: state.user ? { ...state.user, role } : null
+            })),
+        }),
+        { name: 'auth-storage' }
+    )
+);
 
 export default useAuthStore;

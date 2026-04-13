@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log"
 	"net/http"
 	"strings"
 
@@ -30,7 +31,9 @@ func AuthMiddleware(jwtMgr *utils.JWTManager) gin.HandlerFunc {
 		// Сохраняем данные пользователя в контекст
 		c.Set("user_id", claims.UserID)
 		c.Set("user_email", claims.Email)
-		c.Set("user_role", claims.Role) // ← ВАЖНО!
+		c.Set("user_role", strings.TrimSpace(claims.Role)) // ❗ TrimSpace на всякий случай
+
+		log.Printf("🔐 AuthMiddleware: set user_role='%s'", claims.Role) // 🐛 ЛОГ
 
 		c.Next()
 	}

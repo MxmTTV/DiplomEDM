@@ -30,10 +30,10 @@ const Filters: React.FC<FiltersProps> = ({ onSearch, onStatusFilter, onSort, onR
                         style={{ width: 200 }}
                         options={[
                             { value: 'draft', label: 'Черновик' },
-                            { value: 'pending', label: 'На согласовании' },
+                            { value: 'review', label: 'На согласовании' },
                             { value: 'approved', label: 'Утверждён' },
                             { value: 'rejected', label: 'Отклонён' },
-                            { value: 'archived', label: 'Архив' },
+                            { value: 'completed', label: 'Завершён' },
                         ]}
                     />
 

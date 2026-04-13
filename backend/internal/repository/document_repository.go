@@ -2,7 +2,6 @@ package repository
 
 import (
 	"DiplomEDM/backend/internal/models"
-
 	"gorm.io/gorm"
 )
 
@@ -50,14 +49,14 @@ func (r *DocumentRepository) GetDocumentByFilePath(filePath string) (*models.Doc
 }
 
 // UpdateDocumentStatus обновляет статус документа
-func (r *DocumentRepository) UpdateDocumentStatus(id uint, status models.DocumentStatus) error {
+func (r *DocumentRepository) UpdateDocumentStatus(id uint, status string) error {
 	return r.db.Model(&models.Document{}).
 		Where("id = ?", id).
-		Update("current_status", status).Error
+		Update("current_status_code", status).Error  // ❗ current_status_code вместо current_status
 }
 
-// UpdateDocumentStatus обновляет статус документа
-func (r *DocumentRepository) UpdateDocumentsStatus(id uint, status models.DocumentStatus) error {
+// UpdateDocumentsStatus обновляет статус документа (дублирующая функция, можно удалить)
+func (r *DocumentRepository) UpdateDocumentsStatus(id uint, status string) error {
 	return r.db.Model(&models.Document{}).
 		Where("id = ?", id).
 		Update("current_status_code", status).Error
@@ -68,14 +67,14 @@ func (r *DocumentRepository) GetDocumentsWithFilters(authorID uint, userRole str
 	var docs []models.Document
 	query := r.db.Model(&models.Document{}).Preload("Author")
 
-	// Фильтр по автору (если не админ)
-	if userRole != "admin" {
+	// Фильтр по автору (если не админ/директор)
+	if userRole != "admin" && userRole != "director" {
 		query = query.Where("author_id = ?", authorID)
 	}
 
 	// Фильтр по статусу
 	if status != "" {
-		query = query.Where("current_status = ?", status)
+		query = query.Where("current_status_code = ?", status)  // ❗ current_status_code
 	}
 
 	// Фильтр по названию (поиск)

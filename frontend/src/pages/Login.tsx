@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Form, Input, Button, Card, message } from 'antd';
+import { Form, Input, Button, Card, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import api from '../api/axios';
 import useAuthStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 
 function Login() {
+    const { Title, Text } = Typography;
     const [loading, setLoading] = useState(false);
     const login = useAuthStore((state) => state.login);
     const navigate = useNavigate();
@@ -16,7 +17,8 @@ function Login() {
             const response = await api.post('/auth/login', values);
             login(response.data.user, response.data.token);
             message.success('Успешный вход!');
-            navigate('/documents');
+            sessionStorage.removeItem('hasSeenWelcome');
+            navigate('/welcome');
         } catch (error) {
             message.error('Неверный email или пароль');
         }
@@ -24,19 +26,15 @@ function Login() {
     };
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-        }}>
-            <Card
-                title="🔐 Вход в систему ЭДО"
-                style={{ width: 400, boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}
-                bordered={false}
-            >
-                <Form onFinish={onFinish} layout="vertical" size="large">
+        <div className="auth-shell">
+            <Card className="auth-card animate-fadeIn" bordered={false}>
+                <div style={{ marginBottom: 24 }}>
+                    <Text style={{ color: '#4f46e5', fontWeight: 600 }}>Электронный документооборот</Text>
+                    <Title level={3} style={{ margin: '8px 0 6px' }}>Вход в систему</Title>
+                    <Text type="secondary">Введите корпоративную почту и пароль</Text>
+                </div>
+
+                <Form onFinish={onFinish} layout="vertical" size="large" autoComplete="off">
                     <Form.Item
                         name="email"
                         rules={[{ required: true, type: 'email', message: 'Введите корректный email' }]}
@@ -64,6 +62,7 @@ function Login() {
                             loading={loading}
                             block
                             size="large"
+                            className="btn-primary"
                         >
                             Войти
                         </Button>

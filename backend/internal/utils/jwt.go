@@ -2,49 +2,66 @@ package utils
 
 import (
 	"DiplomEDM/backend/internal/models"
-	"github.com/golang-jwt/jwt/v5"
+	"errors"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
-type JWTManager struct {
-	secretKey string
-	duration  time.Duration
+// Claims представляет данные в JWT токене
+type Claims struct {
+	UserID uint   `json:"user_id"`
+	Email  string `json:"email"`
+	Role   string `json:"role"`
+	jwt.RegisteredClaims
 }
 
-func NewJWTManager(secretKey string, duration time.Duration) *JWTManager {
-	return &JWTManager{secretKey: secretKey, duration: duration}
+// JWTManager управляет JWT токенами
+type JWTManager struct {
+	secretKey  string
+	expiration time.Duration // ✅ ДОБАВЛЕНО ПОЛЕ
+}
+
+// NewJWTManager создаёт новый JWT менеджер
+func NewJWTManager(secretKey string, expiration time.Duration) *JWTManager {
+	return &JWTManager{
+		secretKey:  secretKey,
+		expiration: expiration,
+	}
 }
 
 // GenerateToken создаёт JWT токен для пользователя
-func (m *JWTManager) GenerateToken(user *models.User) (string, error) {
-	claims := models.JWTClaims{
+func (j *JWTManager) GenerateToken(user *models.User) (string, error) {
+	claims := &Claims{
 		UserID: user.ID,
 		Email:  user.Email,
-		Role:   string(user.Role),
+		Role:   user.Role, // ✅ Добавляем роль
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.duration)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(j.expiration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Subject:   string(user.Role),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(m.secretKey))
+	return token.SignedString([]byte(j.secretKey))
 }
 
 // VerifyToken проверяет и парсит JWT токен
-func (m *JWTManager) VerifyToken(tokenString string) (*models.JWTClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &models.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(m.secretKey), nil
+func (j *JWTManager) VerifyToken(tokenString string) (*Claims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return []byte(j.secretKey), nil
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	claims, ok := token.Claims.(*models.JWTClaims)
+	claims, ok := token.Claims.(*Claims)
 	if !ok || !token.Valid {
-		return nil, jwt.ErrSignatureInvalid
+		return nil, errors.New("invalid token")
 	}
 
 	return claims, nil
