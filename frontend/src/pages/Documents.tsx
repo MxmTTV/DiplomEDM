@@ -2,14 +2,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
     Table, Button, Card, Space, Modal, Form, Input, Tag,
-    Upload, Drawer, Select, Tooltip,
+    Upload, Drawer, Select, Tooltip, Typography,
     Row, Col, Statistic, Empty
 } from 'antd';
 import {
     PlusOutlined, UploadOutlined, EyeOutlined, DownloadOutlined,
     SearchOutlined, ReloadOutlined,
     FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined,
-    CloseCircleOutlined
+    CloseCircleOutlined, BarChartOutlined
 } from '@ant-design/icons';
 import { Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import toast from 'react-hot-toast';
@@ -59,6 +59,7 @@ const STATUS_TAG_COLORS: Record<DocStatus, string> = {
 };
 
 function Documents() {
+    const { Title, Text } = Typography;
     // ✅ STATE
     const [documents, setDocuments] = useState<Document[]>([]);
     const [loading, setLoading] = useState(false);
@@ -428,33 +429,55 @@ function Documents() {
 
     return (
         <div className="animate-fadeIn">
-            <div style={{ marginBottom: 24 }}>
-                <h1 style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>Документы</h1>
-                <p style={{ margin: '6px 0 0', color: pageTheme.textSecondary }}>
-                    Управление документами, статусами и историей согласования
-                </p>
+            <div className="documents-hero">
+                <Space style={{ width: '100%', justifyContent: 'space-between' }} wrap>
+                    <div>
+                        <Title level={1} style={{ margin: 0 }}>Document Control Center</Title>
+                        <Text style={{ fontSize: 15 }}>
+                            Управляйте согласованием и движением документов в одном окне.
+                        </Text>
+                    </div>
+                    <Space wrap>
+                        <Button
+                            type="primary"
+                            ghost
+                            icon={<PlusOutlined />}
+                            onClick={() => setUploadModal(true)}
+                            style={{ borderColor: 'rgba(255,255,255,0.75)', color: '#fff', borderRadius: 12, fontWeight: 600 }}
+                        >
+                            Добавить документ
+                        </Button>
+                        <Button
+                            icon={<BarChartOutlined />}
+                            onClick={fetchDocuments}
+                            style={{ borderRadius: 12, border: 'none' }}
+                        >
+                            Обновить ленту
+                        </Button>
+                    </Space>
+                </Space>
             </div>
 
             {/* 📊 DASHBOARD STATS */}
             <div className="animate-fadeIn" style={{ marginBottom: 24 }}>
                 <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
                     <Col xs={24} sm={12} lg={6}>
-                        <Card className="shadow-lg rounded-2xl page-card" style={{ background: pageTheme.cardBackground, border: `1px solid ${pageTheme.border}` }}>
+                        <Card className="shadow-lg rounded-2xl page-card metric-card" style={{ background: pageTheme.cardBackground, border: `1px solid ${pageTheme.border}` }}>
                             <Statistic title="Всего документов" value={dashboardData.stats.total} prefix={<FileTextOutlined style={{ color: '#1890ff' }} />} valueStyle={{ color: '#1890ff', fontSize: 28 }} />
                         </Card>
                     </Col>
                     <Col xs={24} sm={12} lg={6}>
-                        <Card className="shadow-lg rounded-2xl page-card" style={{ background: pageTheme.cardBackground, border: `1px solid ${pageTheme.border}` }}>
+                        <Card className="shadow-lg rounded-2xl page-card metric-card" style={{ background: pageTheme.cardBackground, border: `1px solid ${pageTheme.border}` }}>
                             <Statistic title="На согласовании" value={dashboardData.stats.review} prefix={<ClockCircleOutlined style={{ color: '#fa8c16' }} />} valueStyle={{ color: '#fa8c16', fontSize: 28 }} />
                         </Card>
                     </Col>
                     <Col xs={24} sm={12} lg={6}>
-                        <Card className="shadow-lg rounded-2xl page-card" style={{ background: pageTheme.cardBackground, border: `1px solid ${pageTheme.border}` }}>
+                        <Card className="shadow-lg rounded-2xl page-card metric-card" style={{ background: pageTheme.cardBackground, border: `1px solid ${pageTheme.border}` }}>
                             <Statistic title="Утверждено" value={dashboardData.stats.approved} prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />} valueStyle={{ color: '#52c41a', fontSize: 28 }} />
                         </Card>
                     </Col>
                     <Col xs={24} sm={12} lg={6}>
-                        <Card className="shadow-lg rounded-2xl page-card" style={{ background: pageTheme.cardBackground, border: `1px solid ${pageTheme.border}` }}>
+                        <Card className="shadow-lg rounded-2xl page-card metric-card" style={{ background: pageTheme.cardBackground, border: `1px solid ${pageTheme.border}` }}>
                             <Statistic title="Отклонено" value={dashboardData.stats.rejected} prefix={<CloseCircleOutlined style={{ color: '#f5222d' }} />} valueStyle={{ color: '#f5222d', fontSize: 28 }} />
                         </Card>
                     </Col>
@@ -497,7 +520,7 @@ function Documents() {
             </div>
 
             {/* 🔍 ФИЛЬТРЫ */}
-            <Card className="shadow-lg rounded-2xl page-card" style={{ background: pageTheme.cardBackground, marginBottom: 24, border: `1px solid ${pageTheme.border}` }}>
+            <Card className="shadow-lg rounded-2xl soft-panel" style={{ background: pageTheme.cardBackground, marginBottom: 24, border: `1px solid ${pageTheme.border}` }}>
                 <Space direction="vertical" style={{ width: '100%' }} size="large">
                     <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                         <Input.Search
@@ -540,7 +563,7 @@ function Documents() {
             </Card>
 
             {/* 📋 ТАБЛИЦА */}
-            <Card className="shadow-lg rounded-2xl page-card" style={{ background: pageTheme.cardBackground, border: `1px solid ${pageTheme.border}` }}>
+            <Card className="shadow-lg rounded-2xl soft-panel table-shell" style={{ background: pageTheme.cardBackground, border: `1px solid ${pageTheme.border}` }}>
                 <div style={{ marginBottom: 16 }}>
                     <Button type="primary" icon={<PlusOutlined />} onClick={() => setUploadModal(true)} className="btn-primary">
                         Загрузить документ

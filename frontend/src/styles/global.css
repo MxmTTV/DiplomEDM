@@ -34,6 +34,45 @@ body {
     background: transparent;
 }
 
+.main-shell .ant-layout-sider {
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 52%, #334155 100%) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.main-sidebar-header {
+    padding: 22px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.main-shell .ant-menu {
+    background: transparent !important;
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.main-shell .ant-menu-item {
+    margin-inline: 10px !important;
+    margin-block: 6px !important;
+    border-radius: 12px !important;
+    height: 44px !important;
+    line-height: 44px !important;
+}
+
+.main-shell .ant-menu-item-selected {
+    background: rgba(255, 255, 255, 0.14) !important;
+    color: #fff !important;
+}
+
+.main-shell .ant-menu-item:hover {
+    color: #fff !important;
+}
+
+.main-header {
+    padding: 14px 24px !important;
+    background: rgba(255, 255, 255, 0.78) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
 .auth-shell {
     min-height: 100vh;
     display: flex;
@@ -55,9 +94,82 @@ body {
     backdrop-filter: blur(10px);
 }
 
+.auth-brand-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 999px;
+    padding: 7px 12px;
+    background: rgba(79, 70, 229, 0.1);
+    color: #4338ca;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.auth-title {
+    margin: 12px 0 8px !important;
+    font-size: 30px !important;
+    line-height: 1.15 !important;
+}
+
+.glass-card {
+    border-radius: 20px !important;
+    border: 1px solid rgba(255, 255, 255, 0.6) !important;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.16) !important;
+    backdrop-filter: blur(14px);
+}
+
 .page-card {
     border-radius: 16px !important;
     box-shadow: var(--shadow-soft);
+}
+
+.documents-hero {
+    border-radius: 22px;
+    padding: 24px;
+    margin-bottom: 22px;
+    background:
+        radial-gradient(circle at 10% 0%, rgba(255, 255, 255, 0.28), transparent 45%),
+        linear-gradient(125deg, #4338ca 0%, #4f46e5 45%, #2563eb 100%);
+    color: #fff;
+    box-shadow: 0 20px 44px rgba(37, 99, 235, 0.24);
+}
+
+.documents-hero h1 {
+    color: #fff !important;
+    margin-bottom: 8px !important;
+}
+
+.documents-hero p {
+    color: rgba(255, 255, 255, 0.85);
+    margin: 0;
+}
+
+.metric-card .ant-statistic-title {
+    color: #64748b !important;
+    font-weight: 600;
+}
+
+.metric-card .ant-statistic-content-value {
+    font-size: 30px !important;
+}
+
+.soft-panel {
+    border-radius: 18px !important;
+    border: 1px solid rgba(148, 163, 184, 0.2) !important;
+    background: rgba(255, 255, 255, 0.82) !important;
+    backdrop-filter: blur(8px);
+}
+
+.table-shell .ant-table-container {
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+}
+
+.table-shell .ant-table-thead > tr > th {
+    background: #f8fafc !important;
+    color: #334155 !important;
+    font-weight: 700;
 }
 
 .shadow-lg {
@@ -115,4 +227,6 @@ body {
 
 @media (max-width: 768px) {
     .mobile-hide { display: none !important; }
+    .documents-hero { padding: 18px; }
+    .auth-title { font-size: 24px !important; }
 }

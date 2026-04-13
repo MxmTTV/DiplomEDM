@@ -2,7 +2,7 @@ import { Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { Layout, Menu, Button, Avatar, Dropdown, theme as antdTheme, Badge } from 'antd';
 import {
     DashboardOutlined, FileTextOutlined, LogoutOutlined,
-    UserOutlined, BellOutlined
+    UserOutlined, BellOutlined, CrownOutlined
 } from '@ant-design/icons';
 import useAuthStore from '../store/authStore';
 import { notify } from '../utils/notification';
@@ -55,51 +55,56 @@ const MainLayout: React.FC = () => {
 
     const userMenu = {
         items: [
-            { key: 'profile', icon: <UserOutlined />, label: 'Профиль' },
+            { key: 'profile', icon: <UserOutlined />, label: user.email },
             { key: 'logout', icon: <LogoutOutlined />, label: 'Выйти', danger: true, onClick: handleLogout },
         ],
     };
 
     return (
-        <Layout className="app-surface" style={{ minHeight: '100vh' }}>
+        <Layout className="app-surface main-shell" style={{ minHeight: '100vh' }}>
             <Sider
                 width={250}
-                theme="light"
+                theme="dark"
                 breakpoint="lg"
                 collapsedWidth={0}
-                style={{
-                    borderRight: `1px solid ${antdToken.colorBorderSecondary}`,
-                    boxShadow: '8px 0 20px rgba(15, 23, 42, 0.03)',
-                }}
             >
-                <div style={{ padding: '20px 16px 18px', borderBottom: `1px solid ${antdToken.colorBorderSecondary}` }}>
-                    <h3 className="app-logo" style={{ margin: 0 }}>DiplomEDM</h3>
-                    <span style={{ color: antdToken.colorTextSecondary, fontSize: 12 }}>Документооборот учреждения</span>
+                <div className="main-sidebar-header">
+                    <h3 style={{ margin: 0, color: '#fff', fontSize: 20, letterSpacing: 0.2 }}>DiplomEDM</h3>
+                    <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: 12 }}>Smart document workspace</span>
                 </div>
                 <Menu
                     mode="inline"
                     selectedKeys={[location.pathname]}
                     items={menuItems}
-                    style={{ border: 'none', paddingTop: 10 }}
+                    style={{ border: 'none', paddingTop: 10, fontWeight: 600 }}
                 />
             </Sider>
             <Layout>
-                <Header style={{
-                    background: '#fff', padding: '0 24px', display: 'flex',
+                <Header className="main-header" style={{
+                    display: 'flex',
                     justifyContent: 'space-between', alignItems: 'center',
-                    borderBottom: `1px solid ${antdToken.colorBorderSecondary}`, boxShadow: '0 4px 14px rgba(15,23,42,0.04)'
                 }}>
-                    <h2 style={{ margin: 0, fontSize: 18, fontWeight: 650 }}>
+                    <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
                         {MENU_ITEMS[user.role].find(i => i.path === location.pathname)?.label || 'Панель'}
                     </h2>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                        <Badge count={3} size="small">
-                            <Button type="text" icon={<BellOutlined />} size="large" />
+                        <Badge count={3} size="small" color="#4f46e5">
+                            <Button type="text" icon={<BellOutlined />} size="large" style={{ color: '#334155' }} />
                         </Badge>
                         <Dropdown menu={userMenu} trigger={['click']}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                            <div style={{
+                                display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
+                                background: '#fff', border: `1px solid ${antdToken.colorBorderSecondary}`,
+                                borderRadius: 14, padding: '6px 10px'
+                            }}>
                                 <Avatar icon={<UserOutlined />} style={{ background: 'linear-gradient(135deg, #4f46e5, #2563eb)' }} />
-                                <span style={{ fontWeight: 500 }}>{user.full_name}</span>
+                                <div className="mobile-hide">
+                                    <div style={{ fontWeight: 700, lineHeight: 1.15 }}>{user.full_name}</div>
+                                    <div style={{ fontSize: 11, color: antdToken.colorTextSecondary }}>
+                                        {user.role === 'director' && <CrownOutlined style={{ marginRight: 4 }} />}
+                                        {user.role.toUpperCase()}
+                                    </div>
+                                </div>
                             </div>
                         </Dropdown>
                     </div>

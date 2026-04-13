@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Form, Input, Button, Card, Typography, message } from 'antd';
-import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import { UserOutlined, LockOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import api from '../api/axios';
 import useAuthStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -27,11 +27,14 @@ function Login() {
 
     return (
         <div className="auth-shell">
-            <Card className="auth-card animate-fadeIn" bordered={false}>
+            <Card className="auth-card glass-card animate-fadeIn" bordered={false}>
                 <div style={{ marginBottom: 24 }}>
-                    <Text style={{ color: '#4f46e5', fontWeight: 600 }}>Электронный документооборот</Text>
-                    <Title level={3} style={{ margin: '8px 0 6px' }}>Вход в систему</Title>
-                    <Text type="secondary">Введите корпоративную почту и пароль</Text>
+                    <div className="auth-brand-chip">
+                        <SafetyCertificateOutlined />
+                        Защищенный EDM Workspace
+                    </div>
+                    <Title className="auth-title" level={2}>Добро пожаловать</Title>
+                    <Text type="secondary">Авторизуйтесь и продолжите работу с документами учреждения</Text>
                 </div>
 
                 <Form onFinish={onFinish} layout="vertical" size="large" autoComplete="off">
