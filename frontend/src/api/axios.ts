@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: '/api',
+    baseURL: 'http://localhost:8080/api',   // ← Добавь /api в конец
 });
 
 api.interceptors.request.use((config) => {
@@ -10,7 +10,6 @@ api.interceptors.request.use((config) => {
         config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // ✅ НЕ устанавливаем Content-Type для FormData!
     if (!(config.data instanceof FormData)) {
         config.headers['Content-Type'] = 'application/json';
     }

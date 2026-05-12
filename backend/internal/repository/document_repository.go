@@ -2,6 +2,7 @@ package repository
 
 import (
 	"DiplomEDM/backend/internal/models"
+
 	"gorm.io/gorm"
 )
 
@@ -18,7 +19,7 @@ func (r *DocumentRepository) CreateDocument(doc *models.Document) error {
 	return r.db.Create(doc).Error
 }
 
-// GetDocumentsByAuthor получает документы конкретного автора
+// GetDocumentsByAuthor получает документы автора
 func (r *DocumentRepository) GetDocumentsByAuthor(authorID uint) ([]models.Document, error) {
 	var docs []models.Document
 	err := r.db.Where("author_id = ?", authorID).
@@ -28,7 +29,7 @@ func (r *DocumentRepository) GetDocumentsByAuthor(authorID uint) ([]models.Docum
 	return docs, err
 }
 
-// GetDocumentByID находит документ по ID
+// GetDocumentByID получает документ по ID
 func (r *DocumentRepository) GetDocumentByID(id uint) (*models.Document, error) {
 	var doc models.Document
 	err := r.db.Preload("Author").First(&doc, id).Error
@@ -38,61 +39,49 @@ func (r *DocumentRepository) GetDocumentByID(id uint) (*models.Document, error) 
 	return &doc, nil
 }
 
-// GetDocumentByFilePath находит документ по пути к файлу
-func (r *DocumentRepository) GetDocumentByFilePath(filePath string) (*models.Document, error) {
-	var doc models.Document
-	err := r.db.Where("file_path = ?", filePath).First(&doc).Error
-	if err != nil {
-		return nil, err
-	}
-	return &doc, nil
-}
-
-// UpdateDocumentStatus обновляет статус документа
+// UpdateDocumentStatus обновляет статус
 func (r *DocumentRepository) UpdateDocumentStatus(id uint, status string) error {
-	return r.db.Model(&models.Document{}).
-		Where("id = ?", id).
-		Update("current_status_code", status).Error  // ❗ current_status_code вместо current_status
-}
-
-// UpdateDocumentsStatus обновляет статус документа (дублирующая функция, можно удалить)
-func (r *DocumentRepository) UpdateDocumentsStatus(id uint, status string) error {
 	return r.db.Model(&models.Document{}).
 		Where("id = ?", id).
 		Update("current_status_code", status).Error
 }
 
-// GetDocumentsWithFilters получает документы с фильтрацией
-func (r *DocumentRepository) GetDocumentsWithFilters(authorID uint, userRole string, status string, title string, dateFrom string, dateTo string) ([]models.Document, error) {
+// GetDocumentsWithFilters — основной метод с фильтрами
+func (r *DocumentRepository) GetDocumentsWithFilters(authorID uint, userRole string, status, title, dateFrom, dateTo string) ([]models.Document, error) {
 	var docs []models.Document
 	query := r.db.Model(&models.Document{}).Preload("Author")
 
-	// Фильтр по автору (если не админ/директор)
-	if userRole != "admin" && userRole != "director" {
+	// Ограничение по автору для обычных пользователей
+	if userRole != models.RoleDirector && userRole != "admin" && userRole != models.RoleSecretary {
 		query = query.Where("author_id = ?", authorID)
 	}
 
 	// Фильтр по статусу
 	if status != "" {
-		query = query.Where("current_status_code = ?", status)  // ❗ current_status_code
+		query = query.Where("current_status_code = ?", status)
 	}
 
-	// Фильтр по названию (поиск)
+	// Поиск по названию
 	if title != "" {
 		query = query.Where("title ILIKE ?", "%"+title+"%")
 	}
 
-	// Фильтр по дате от
+	// Фильтр по дате
 	if dateFrom != "" {
 		query = query.Where("created_at >= ?", dateFrom)
 	}
-
-	// Фильтр по дате до
 	if dateTo != "" {
 		query = query.Where("created_at <= ?", dateTo)
 	}
 
-	// Сортировка по дате (новые сверху)
 	err := query.Order("created_at DESC").Find(&docs).Error
+	return docs, err
+}
+
+// GetAllDocuments — возвращает все документы без фильтрации
+func (r *DocumentRepository) GetAllDocuments() ([]models.Document, error) {
+	var docs []models.Document
+	// ✅ БЕЗ WHERE ПО AUTHOR_ID — возвращаем всё!
+	err := r.db.Preload("Author").Order("created_at DESC").Find(&docs).Error
 	return docs, err
 }

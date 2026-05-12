@@ -8,7 +8,6 @@ import type { Role } from './types/roles';
 // Pages
 import Login from './pages/Login';
 import Welcome from './pages/Welcome';
-import Dashboard from './components/Dashboard';
 import Documents from './pages/Documents';
 
 // Layout
@@ -37,23 +36,32 @@ function App() {
                 },
             }}
         >
-            <Toaster position="top-right" />
+            <Toaster
+                position="top-right"
+                toastOptions={{
+                    duration: 3000,
+                    style: {
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                    },
+                }}
+            />
             <BrowserRouter>
                 <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/welcome" element={<Welcome />} />
 
                     <Route element={<MainLayout />}>
-                        <Route path="/dashboard" element={
-                            <RoleGuard allowedRoles={ALL_ROLES}><Dashboard documents={[]} /></RoleGuard>
-                        } />
+                        {/* ✅ МАРШРУТ НА DASHBOARD → ТЕПЕРЬ REDIRECT НА /documents */}
+                        <Route path="/dashboard" element={<Navigate to="/documents" replace />} />
+
                         <Route path="/documents" element={
                             <RoleGuard allowedRoles={ALL_ROLES}><Documents /></RoleGuard>
                         } />
                     </Route>
 
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/" element={<Navigate to="/documents" replace />} />
+                    <Route path="*" element={<Navigate to="/documents" replace />} />
                 </Routes>
             </BrowserRouter>
         </ConfigProvider>

@@ -3,6 +3,7 @@ package service
 import (
 	"DiplomEDM/backend/internal/models"
 	"DiplomEDM/backend/internal/repository"
+	"time"
 )
 
 type HistoryService struct {
@@ -13,13 +14,18 @@ func NewHistoryService(repo *repository.HistoryRepository) *HistoryService {
 	return &HistoryService{repo: repo}
 }
 
+// GetDocumentHistory получает историю документа
+func (s *HistoryService) GetDocumentHistory(documentID uint) ([]models.DocumentHistory, error) {
+	return s.repo.GetHistoryByDocumentID(documentID)
+}
+
 // LogDocumentCreation логирует создание документа
 func (s *HistoryService) LogDocumentCreation(documentID, userID uint) error {
 	history := &models.DocumentHistory{
 		DocumentID: documentID,
 		UserID:     userID,
-		Action:     models.ActionCreated,
-		NewStatus:  string(models.StatusDraft),
+		Action:     "created",
+		CreatedAt:  time.Now(),
 	}
 	return s.repo.CreateHistory(history)
 }
@@ -29,25 +35,11 @@ func (s *HistoryService) LogStatusChange(documentID, userID uint, oldStatus, new
 	history := &models.DocumentHistory{
 		DocumentID: documentID,
 		UserID:     userID,
-		Action:     models.ActionStatusChanged,
-		Comment:    comment,
+		Action:     "status_change",
 		OldStatus:  oldStatus,
 		NewStatus:  newStatus,
+		Comment:    comment,
+		CreatedAt:  time.Now(),
 	}
 	return s.repo.CreateHistory(history)
-}
-
-// LogDownload логирует скачивание документа
-func (s *HistoryService) LogDownload(documentID, userID uint) error {
-	history := &models.DocumentHistory{
-		DocumentID: documentID,
-		UserID:     userID,
-		Action:     models.ActionDownloaded,
-	}
-	return s.repo.CreateHistory(history)
-}
-
-// GetDocumentHistory получает историю документа
-func (s *HistoryService) GetDocumentHistory(documentID uint) ([]models.DocumentHistory, error) {
-	return s.repo.GetHistoryByDocumentID(documentID)
 }

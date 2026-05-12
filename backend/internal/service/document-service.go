@@ -6,11 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"mime/multipart"
 	"os"
 	"path/filepath"
 	"strings"
+	"time" // ← добавь, если используешь time.Now()
 )
 
 type DocumentService struct {
@@ -25,36 +25,31 @@ func NewDocumentService(repo *repository.DocumentRepository, historyService *His
 	}
 }
 
-// AllowedMimeTypes разрешённые типы файлов
 var AllowedMimeTypes = map[string]bool{
 	"application/pdf":    true,
 	"application/msword": true,
 	"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true,
 }
 
-// UploadDocument обрабатывает загрузку файла
+// UploadDocument — загрузка файла
 func (s *DocumentService) UploadDocument(file *multipart.FileHeader, title, description string, authorID uint, storagePath string) (*models.Document, error) {
-	// Проверяем тип файла
 	if !AllowedMimeTypes[file.Header.Get("Content-Type")] {
-		return nil, errors.New("file type not allowed (only PDF, DOC, DOCX)")
+		return nil, errors.New("недопустимый тип файла (только PDF, DOC, DOCX)")
 	}
 
-	// Проверяем расширение
 	ext := strings.ToLower(filepath.Ext(file.Filename))
 	if ext != ".pdf" && ext != ".doc" && ext != ".docx" {
-		return nil, errors.New("file extension not allowed")
+		return nil, errors.New("недопустимое расширение файла")
 	}
 
-	// Генерируем уникальное имя файла
-	fileName := fmt.Sprintf("%d_%s", authorID, file.Filename)
+	// Уникальное имя файла
+	fileName := fmt.Sprintf("%d_%d_%s", authorID, time.Now().Unix(), file.Filename)
 	filePath := filepath.Join(storagePath, fileName)
 
-	// Сохраняем файл на диск
-	if err := saveFile(file, filePath); err != nil {
+	if err := s.saveFile(file, filePath); err != nil {
 		return nil, err
 	}
 
-	// Создаём запись в БД
 	doc := &models.Document{
 		Title:             title,
 		Description:       description,
@@ -63,128 +58,118 @@ func (s *DocumentService) UploadDocument(file *multipart.FileHeader, title, desc
 		FileSize:          file.Size,
 		MimeType:          file.Header.Get("Content-Type"),
 		AuthorID:          authorID,
-		CurrentStatusCode: models.StatusDraft, // ✅ Используем константу
+		CurrentStatusCode: models.StatusDraft,
 	}
 
 	if err := s.repo.CreateDocument(doc); err != nil {
 		return nil, err
 	}
 
-	// 📝 ЛОГИРУЕМ СОЗДАНИЕ В ИСТОРИЮ
-	if err := s.historyService.LogDocumentCreation(doc.ID, authorID); err != nil {
-		// Не прерываем операцию, если логирование не удалось
-		log.Printf("Warning: failed to log history: %v", err)
-	}
+	// Логируем создание
+	s.historyService.LogDocumentCreation(doc.ID, authorID)
 
 	return doc, nil
 }
 
-// saveFile сохраняет файл на диск
-func saveFile(file *multipart.FileHeader, filePath string) error {
-	// Создаём папку, если нет
+func (s *DocumentService) saveFile(file *multipart.FileHeader, filePath string) error {
 	dir := filepath.Dir(filePath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return err
 	}
 
-	// Открываем исходный файл
 	src, err := file.Open()
 	if err != nil {
 		return err
 	}
 	defer src.Close()
 
-	// Создаём файл назначения
 	out, err := os.Create(filePath)
 	if err != nil {
 		return err
 	}
 	defer out.Close()
 
-	// Копируем данные
 	_, err = io.Copy(out, src)
 	return err
 }
 
-// GetMyDocuments получает список документов текущего пользователя
-func (s *DocumentService) GetMyDocuments(authorID uint) ([]models.Document, error) {
-	return s.repo.GetDocumentsByAuthor(authorID)
-}
-
-// GetDocumentByID получает документ по ID с проверкой прав
-func (s *DocumentService) GetDocumentByID(id, userID uint, userRole string) (*models.Document, error) {
-	doc, err := s.repo.GetDocumentByID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	// Проверка прав: директор и админ видят всё, остальные — только своё
-	if userRole != models.RoleDirector && userRole != "admin" && doc.AuthorID != userID {
-		return nil, errors.New("access denied")
-	}
-
-	return doc, nil
-}
-
-// ChangeStatus меняет статус документа
-// ChangeStatus меняет статус документа
+// ChangeStatus — смена статуса (исправленная версия)
+// ChangeStatus — смена статуса
 func (s *DocumentService) ChangeStatus(id, userID uint, req *models.ChangeStatusRequest, userRole string) (*models.Document, error) {
-	// 🐛 ЛОГ: что пришло в сервис
-	log.Printf("🔍 Service ChangeStatus: userRole='%s', userID=%d, doc_id=%d", userRole, userID, id)
-
-	// Получаем документ
 	doc, err := s.repo.GetDocumentByID(id)
 	if err != nil {
-		return nil, errors.New("document not found")
+		return nil, errors.New("документ не найден")
 	}
 
-	log.Printf("🔍 Document author_id=%d, current_status=%s", doc.AuthorID, doc.CurrentStatusCode)
-
-	// 🔐 ПРОВЕРКА ПРАВ:
-	log.Printf("🔍 Checking permissions: userRole='%s', isDirector=%v, isAdmin=%v",
-		userRole, userRole == models.RoleDirector, userRole == "admin")
-
-	// Директор и админ могут менять ЛЮБЫЕ документы
-	if userRole == models.RoleDirector || userRole == "admin" {
-		log.Printf("✅ User is director/admin, allowing access")
-		// Все права есть
-	} else if userRole == models.RoleSecretary {
-		log.Printf("✅ User is secretary, allowing access")
-		// Секретарь может менять любые документы
-	} else {
-		log.Printf("⚠️ User is teacher/zavuch, checking ownership")
-		// Учитель и завуч — только свои документы
-		if doc.AuthorID != userID {
-			log.Printf("❌ Access denied: doc.AuthorID=%d != userID=%d", doc.AuthorID, userID)
-			return nil, errors.New("недостаточно прав для изменения чужого документа")
-		}
-	}
-
-	// Проверяем допустимые переходы статусов
 	oldStatus := doc.CurrentStatusCode
 	newStatus := req.Status
 
-	if !s.isValidStatusTransition(oldStatus, newStatus) {
-		return nil, fmt.Errorf("invalid status transition from %s to %s", oldStatus, newStatus)
+	// ✅ ПРОВЕРКА ПРАВ
+	// Директор может менять на ЛЮБОЙ статус без ограничений
+	if userRole == models.RoleDirector || userRole == "admin" {
+		// Директор может всё!
+	} else {
+		// Для остальных — проверка переходов
+		if !s.canTransitionToStatus(userRole, oldStatus, newStatus) {
+			return nil, fmt.Errorf("недостаточно прав для смены статуса на %s", newStatus)
+		}
 	}
 
-	// Обновляем статус
 	if err := s.repo.UpdateDocumentStatus(id, newStatus); err != nil {
 		return nil, err
 	}
 
-	// Обновляем объект документа
 	doc.CurrentStatusCode = newStatus
 
-	// 📝 ЛОГИРУЕМ СМЕНУ СТАТУСА
-	if err := s.historyService.LogStatusChange(id, userID, oldStatus, newStatus, req.Comment); err != nil {
-		log.Printf("Warning: failed to log status change: %v", err)
-	}
+	// Логируем изменение
+	s.historyService.LogStatusChange(id, userID, oldStatus, newStatus, req.Comment)
 
 	return doc, nil
 }
 
-// isValidStatusTransition проверяет допустимость перехода между статусами
+// Проверка прав на смену статуса
+func (s *DocumentService) canChangeStatus(userRole string, authorID, userID uint) bool {
+	switch userRole {
+	case models.RoleDirector, "admin", models.RoleSecretary:
+		// Директор и секретарь могут всё
+		return true
+	case models.RoleZavuch:
+		// Завуч может только отправить на согласование (review)
+		return false // Проверка будет в isValidStatusTransition
+	case models.RoleTeacher:
+		// Преподаватель не может менять статусы (только загружать)
+		return false
+	default:
+		return false
+	}
+}
+
+// Проверка допустимости перехода статусов с учётом роли
+func (s *DocumentService) canTransitionToStatus(userRole string, from, to string) bool {
+	// Сначала проверяем базовые переходы
+	if !s.isValidStatusTransition(from, to) {
+		return false
+	}
+
+	// ✅ ДИРЕКТОР МОЖЕТ ВСЁ!
+	if userRole == models.RoleDirector || userRole == "admin" {
+		return true
+	}
+
+	// Теперь проверяем права по ролям для остальных
+	switch to {
+	case models.StatusReview:
+		// Отправить на согласование могут: директор, секретарь, завуч
+		return userRole == models.RoleSecretary || userRole == models.RoleZavuch
+	case models.StatusApproved, models.StatusRejected, models.StatusCompleted:
+		// Утвердить/отклонить/архивировать могут: директор, секретарь
+		return userRole == models.RoleSecretary
+	default:
+		return false
+	}
+}
+
+// Проверка перехода статусов
 func (s *DocumentService) isValidStatusTransition(from, to string) bool {
 	transitions := map[string][]string{
 		models.StatusDraft:     {models.StatusReview, models.StatusDraft},
@@ -207,7 +192,31 @@ func (s *DocumentService) isValidStatusTransition(from, to string) bool {
 	return false
 }
 
-// GetDocumentsWithFilters получает документы с фильтрами
+// Остальные методы (получение документов)
+func (s *DocumentService) GetMyDocuments(authorID uint) ([]models.Document, error) {
+	return s.repo.GetDocumentsByAuthor(authorID)
+}
+
+func (s *DocumentService) GetDocumentByID(id, userID uint, userRole string) (*models.Document, error) {
+	doc, err := s.repo.GetDocumentByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if !s.canChangeStatus(userRole, doc.AuthorID, userID) && userRole != models.RoleDirector && userRole != "admin" {
+		if doc.AuthorID != userID {
+			return nil, errors.New("access denied")
+		}
+	}
+
+	return doc, nil
+}
+
 func (s *DocumentService) GetDocumentsWithFilters(authorID uint, userRole string, status, title, dateFrom, dateTo string) ([]models.Document, error) {
 	return s.repo.GetDocumentsWithFilters(authorID, userRole, status, title, dateFrom, dateTo)
+}
+
+// GetAllDocuments — возвращает ВСЕ документы (для админов и общего просмотра)
+func (s *DocumentService) GetAllDocuments() ([]models.Document, error) {
+	return s.repo.GetAllDocuments()
 }

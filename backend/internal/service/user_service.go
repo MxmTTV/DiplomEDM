@@ -16,6 +16,7 @@ func NewUserService(repo *repository.UserRepository, jwtMgr *utils.JWTManager) *
 	return &UserService{repo: repo, jwtMgr: jwtMgr}
 }
 
+
 // Register регистрирует нового пользователя
 func (s *UserService) Register(req *models.RegisterRequest) (*models.AuthResponse, error) {
 	// Проверяем, не занят ли email
@@ -27,12 +28,25 @@ func (s *UserService) Register(req *models.RegisterRequest) (*models.AuthRespons
 		return nil, errors.New("user with this email already exists")
 	}
 
-	// Создаём пользователя
-	// По умолчанию все новые пользователи — учителя (teachers)
+	// ✅ ПРОВЕРКА И ВАЛИДАЦИЯ РОЛИ
+	allowedRoles := map[string]bool{
+		models.RoleDirector:  true,
+		models.RoleSecretary: true,
+		models.RoleZavuch:    true,
+		models.RoleTeacher:   true,
+	}
+
+	// Если роль не передана или недопустима — ставим teacher
+	role := req.Role
+	if role == "" || !allowedRoles[role] {
+		role = models.RoleTeacher
+	}
+
+	// Создаём пользователя с ПРАВИЛЬНОЙ ролью
 	user := &models.User{
 		Email:    req.Email,
 		FullName: req.FullName,
-		Role:     models.RoleTeacher, // ✅ Просто teacher по умолчанию
+		Role:     role, // ← ТЕПЕРЬ БЕРЁМ ИЗ ЗАПРОСА!
 	}
 
 	// Хэшируем пароль
@@ -52,8 +66,11 @@ func (s *UserService) Register(req *models.RegisterRequest) (*models.AuthRespons
 	}
 
 	return &models.AuthResponse{
-		Token: token,
-		User:  *user,
+		Token:    token,
+		ID:       user.ID,
+		Email:    user.Email,
+		FullName: user.FullName,
+		Role:     user.Role,
 	}, nil
 }
 
@@ -80,8 +97,11 @@ func (s *UserService) Login(req *models.LoginRequest) (*models.AuthResponse, err
 	}
 
 	return &models.AuthResponse{
-		Token: token,
-		User:  *user,
+		Token:    token,
+		ID:       user.ID,
+		Email:    user.Email,
+		FullName: user.FullName,
+		Role:     user.Role,
 	}, nil
 }
 

@@ -2,9 +2,10 @@ package handler
 
 import (
 	"DiplomEDM/backend/internal/service"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 type HistoryHandler struct {
@@ -15,7 +16,6 @@ func NewHistoryHandler(service *service.HistoryService) *HistoryHandler {
 	return &HistoryHandler{service: service}
 }
 
-// GetDocumentHistory возвращает историю изменений документа
 func (h *HistoryHandler) GetDocumentHistory(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
@@ -31,6 +31,5 @@ func (h *HistoryHandler) GetDocumentHistory(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"history": history,
-		"count":   len(history),
 	})
 }

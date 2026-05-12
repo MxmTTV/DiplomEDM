@@ -7,6 +7,7 @@ import (
 	"DiplomEDM/backend/internal/repository"
 	"DiplomEDM/backend/internal/service"
 	"DiplomEDM/backend/internal/utils"
+	"DiplomEDM/backend/internal/models"
 	"fmt"
 	"log"
 	"net/http"
@@ -18,7 +19,7 @@ import (
 )
 
 func main() {
-	// 1. Загружаем конфигурацию
+	// 1. Конфигурация
 	cfg := config.Load()
 
 	// 2. Подключение к БД
@@ -28,25 +29,25 @@ func main() {
 	}
 	log.Println("✅ Database connected successfully")
 
-	// 3. JWT Manager
+	// 3. JWT
 	jwtMgr := utils.NewJWTManager(cfg.JWTSecret, time.Hour*24)
 
-	// 4. Инициализация репозиториев
+	// 4. Репозитории
 	userRepo := repository.NewUserRepository(db)
 	docRepo := repository.NewDocumentRepository(db)
 	historyRepo := repository.NewHistoryRepository(db)
 
-	// 5. Инициализация сервисов
+	// 5. Сервисы
 	userService := service.NewUserService(userRepo, jwtMgr)
 	historyService := service.NewHistoryService(historyRepo)
 	docService := service.NewDocumentService(docRepo, historyService)
 
-	// 6. Инициализация хендлеров
+	// 6. Хендлеры
 	userHandler := handler.NewUserHandler(userService)
 	docHandler := handler.NewDocumentHandler(docService)
 	historyHandler := handler.NewHistoryHandler(historyService)
 
-	// 7. Gin
+	// 7. Gin + CORS
 	r := gin.Default()
 
 	r.Use(func(c *gin.Context) {
@@ -59,48 +60,46 @@ func main() {
 			c.AbortWithStatus(204)
 			return
 		}
-
 		c.Next()
 	})
 
-	// 8. Health-check (публичный)
+	// Health check
 	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok", "db": "connected"})
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
-	// 9. Публичные роуты авторизации
+	// Публичные роуты
 	auth := r.Group("/api/auth")
 	{
 		auth.POST("/register", userHandler.Register)
 		auth.POST("/login", userHandler.Login)
 	}
 
-	// 10. Защищённые роуты (требуют токен)
+	// Защищённые роуты
 	api := r.Group("/api")
 	api.Use(middleware.AuthMiddleware(jwtMgr))
 	{
-		// Документы
 		docs := api.Group("/documents")
 		{
 			docs.POST("", docHandler.UploadDocument)
 			docs.GET("", docHandler.GetDocumentsWithFilters)
 			docs.GET("/:id", docHandler.GetDocumentByID)
 			docs.GET("/:id/download", docHandler.DownloadDocument)
-			docs.GET("/:id/history", historyHandler.GetDocumentHistory)
 			docs.PATCH("/:id/status", docHandler.ChangeStatus)
+			docs.GET("/:id/history", historyHandler.GetDocumentHistory) // пока закомментировано
 		}
 
-		// Админские роуты (только admin)
+		// Админ панель
 		admin := api.Group("/admin")
-		admin.Use(middleware.RequireRole("admin"))
+		admin.Use(middleware.RequireRole(models.RoleDirector, "admin"))
 		{
 			admin.GET("/all-documents", func(c *gin.Context) {
-				c.JSON(http.StatusOK, gin.H{"message": "admin only"})
+				c.JSON(http.StatusOK, gin.H{"message": "admin only route"})
 			})
 		}
-	} // ← Здесь ЗАКРЫВАЕМ группу api
+	}
 
-	// 11. Запуск сервера (ВНЕ всех групп!)
+	// Запуск сервера
 	addr := fmt.Sprintf(":%s", cfg.ServerPort)
 	log.Printf("🚀 Server starting on http://localhost%s", addr)
 

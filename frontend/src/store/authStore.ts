@@ -22,7 +22,10 @@ const useAuthStore = create<AuthState>()(
         (set) => ({
             user: null,
             token: null,
-            login: (user, token) => set({ user, token }),
+            login: (user: User, token: string) => {
+                localStorage.setItem('token', token);   // ← Добавь эту строку
+                set({ user, token });
+            },
             logout: () => {
                 localStorage.removeItem('token');
                 set({ user: null, token: null });

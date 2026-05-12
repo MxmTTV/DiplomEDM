@@ -2,20 +2,28 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+      font-family: var(--font-family) !important;
 }
 
 :root {
-    --bg-main: #f4f7ff;
-    --bg-elevated: #ffffff;
-    --bg-soft: #eef2ff;
-    --text-main: #1f2937;
-    --text-secondary: #64748b;
-    --border-main: #e2e8f0;
-    --primary-500: #4f46e5;
-    --primary-600: #4338ca;
-    --shadow-soft: 0 12px 34px rgba(15, 23, 42, 0.08);
-    --shadow-focus: 0 0 0 4px rgba(79, 70, 229, 0.15);
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-size-base: 16px;
+    --font-size-sm: 14px;
+    --font-size-md: 16px;
+    --font-size-lg: 18px;
+    --font-size-xl: 20px;
+    --font-size-2xl: 24px;
+    --font-size-3xl: 32px;
+    --line-height-base: 1.6;
+    --line-height-tight: 1.3;
 }
+
+h1, .ant-typography h1 {
+    font-size: var(--font-size-3xl) !important;
+    font-weight: 800 !important;
+    line-height: var(--line-height-tight) !important;
+}
+
 
 html,
 body,
@@ -229,4 +237,408 @@ body {
     .mobile-hide { display: none !important; }
     .documents-hero { padding: 18px; }
     .auth-title { font-size: 24px !important; }
+}
+/* 🌟 Skeleton мерцание */
+.ant-skeleton.ant-skeleton-active .ant-skeleton-content .ant-skeleton-title,
+.ant-skeleton.ant-skeleton-active .ant-skeleton-content .ant-skeleton-paragraph > li {
+    animation: skeleton-loading 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0 50%;
+    }
+}
+
+/* 🌟 Плавное появление контента */
+.animate-fadeIn {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 🎴 Hover-эффект для карточек */
+.stat-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.stat-card:hover { box-shadow: 0 12px 24px rgba(0,0,0,0.15); transform: translateY(-4px); }
+
+/* 📋 Таблица */
+.table-row-light { background: #fff; }
+.table-row-dark { background: #fafafa; }
+.table-row-light:hover, .table-row-dark:hover { background: rgba(102,126,234,0.08) !important; }
+
+/* 🌟 Анимация */
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fadeIn { animation: fadeInUp 0.4s ease-out; }
+
+/* 🎨 Кнопки */
+.ant-btn-primary { background: linear-gradient(135deg, #667eea, #764ba2) !important; border: none !important; transition: all 0.3s ease; }
+.ant-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(102,126,234,0.4); }
+/* 🌟 ОБЩИЕ УЛУЧШЕНИЯ */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #764ba2, #667eea);
+}
+
+/* 📋 ТАБЛИЦА - УЛУЧШЕНИЯ */
+.ant-table {
+    font-size: 14px;
+}
+
+.ant-table-thead > tr > th {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+    font-weight: 600 !important;
+    color: #495057 !important;
+    padding: 16px 12px !important;
+    border: none !important;
+}
+
+.ant-table-tbody > tr > td {
+    padding: 14px 12px !important;
+    border-color: #e9ecef !important;
+    vertical-align: middle !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+    background: rgba(102, 126, 234, 0.08) !important;
+    transition: background 0.2s ease;
+}
+
+.ant-table-row {
+    transition: all 0.2s ease;
+}
+
+/* 🏷️ СТАТУСЫ - КРАСИВЫЕ БЕЙДЖИ */
+.status-badge {
+    padding: 4px 12px !important;
+    border-radius: 20px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.3px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+/* 🔘 КНОПКИ - УЛУЧШЕНИЯ */
+.ant-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.ant-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.ant-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+}
+
+.ant-btn-primary:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%) !important;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+}
+
+/*  КАРТОЧКИ СТАТИСТИКИ */
+.stat-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border: 1px solid #e9ecef !important;
+}
+
+.stat-card:hover {
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.2);
+    transform: translateY(-6px);
+    border-color: #667eea !important;
+}
+
+/* 🎴 ОБЫЧНЫЕ КАРТОЧКИ */
+.ant-card {
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef !important;
+}
+
+.ant-card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+/* 📌 ЗАГОЛОВОК СТРАНИЦЫ */
+.page-header-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.page-header-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* 🔔 УВЕДОМЛЕНИЯ */
+.ant-badge-count {
+    background: linear-gradient(135deg, #667eea, #764ba2) !important;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+/* 📦 МОДАЛЬНЫЕ ОКНА */
+.ant-modal-content {
+    border-radius: 16px !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15) !important;
+}
+
+.ant-modal-header {
+    border-radius: 16px 16px 0 0 !important;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+    border: none !important;
+}
+
+/* 📜 DRAWER */
+.ant-drawer-content {
+    border-radius: 16px 0 0 16px !important;
+}
+
+.ant-drawer-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+    border: none !important;
+}
+
+/* 🎯 SELECT И INPUT */
+.ant-select-selector,
+.ant-input-outlined {
+    border-radius: 10px !important;
+    border: 1px solid #e9ecef !important;
+    transition: all 0.3s ease !important;
+}
+
+.ant-select-focused .ant-select-selector,
+.ant-input-outlined:focus {
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+}
+
+/* 🏷️ TAGS */
+.ant-tag {
+    border-radius: 8px !important;
+    padding: 4px 12px !important;
+    font-weight: 500 !important;
+}
+
+/* 📊 PAGINATION */
+.ant-pagination-item {
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+.ant-pagination-item:hover {
+    border-color: #667eea !important;
+    transform: translateY(-2px);
+}
+
+.ant-pagination-item-active {
+    background: linear-gradient(135deg, #667eea, #764ba2) !important;
+    border: none !important;
+}
+
+.ant-pagination-item-active a {
+    color: #fff !important;
+}
+
+/* 🌟 АНИМАЦИИ */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ant-table-tbody > tr {
+    animation: slideIn 0.3s ease;
+}
+
+/* 🎨 HOVER ЭФФЕКТЫ ДЛЯ ДЕЙСТВИЙ */
+.ant-btn-link {
+    position: relative;
+    overflow: hidden;
+}
+
+.ant-btn-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.ant-btn-link:hover::before {
+    left: 100%;
+}
+
+/* 📱 АДАПТИВНОСТЬ */
+@media (max-width: 768px) {
+    .ant-table {
+        font-size: 12px;
+    }
+    
+    .ant-table-thead > tr > th,
+    .ant-table-tbody > tr > td {
+        padding: 10px 8px !important;
+    }
+}
+/* 🎯 SELECT ДЛЯ СМЕНЫ СТАТУСА */
+.ant-select-status-dropdown {
+    border-radius: 8px !important;
+}
+
+.ant-select-item {
+    padding: 8px 12px !important;
+    transition: all 0.2s ease !important;
+}
+
+.ant-select-item:hover {
+    background: rgba(102, 126, 234, 0.1) !important;
+}
+
+.ant-select-item-option-selected {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)) !important;
+    font-weight: 600 !important;
+}
+/* 🎉 WELCOME PAGE */
+.welcome-card {
+    animation: welcomeSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes welcomeSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.welcome-card:hover {
+    box-shadow: 0 24px 80px rgba(0,0,0,0.2);
+}
+
+/* Прогресс бар */
+.ant-progress-bg {
+    border-radius: 4px !important;
+    transition: width 0.1s linear !important;
+}
+/* 🎴 ЦВЕТНЫЕ КАРТОЧКИ СТАТИСТИКИ */
+.stat-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    overflow: hidden;
+    position: relative;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    transition: all 0.5s ease;
+}
+
+.stat-card:hover::before {
+    transform: scale(1.5);
+}
+
+.stat-card:hover {
+    box-shadow: 0 16px 40px rgba(0,0,0,0.2) !important;
+}
+
+/* Анимация цифр */
+.ant-statistic-content-value {
+    font-feature-settings: 'tnum';
+    font-variant-numeric: tabular-nums;
+}
+/* 📜 ИСТОРИЯ ДОКУМЕНТОВ */
+.ant-drawer-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border-bottom: none !important;
+}
+
+.ant-drawer-title {
+    color: #fff !important;
+    font-weight: 600 !important;
+    font-size: 16px !important;
+}
+
+.ant-drawer-close {
+    color: #fff !important;
+}
+
+/* Карточки истории */
+.ant-card-borderless {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.ant-card-borderless:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Теги статусов */
+.ant-tag {
+    border-radius: 6px !important;
+    padding: 4px 10px !important;
+    font-weight: 500 !important;
+}
+
+/* Аватарки */
+.ant-avatar {
+    border: 2px solid #fff !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
 }
